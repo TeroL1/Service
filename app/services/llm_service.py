@@ -1,21 +1,39 @@
 from typing import List
-from transformers import pipeline
 
-qa_pipeline = pipeline(
-    "text2text-generation",
-    model="google/flan-t5-base",
-    max_length=512
+import os
+from huggingface_hub import InferenceClient
+from dotenv import load_dotenv
+
+load_dotenv()
+
+client = InferenceClient(
+    provider="novita",
+    api_key=os.environ["HF_TOKEN"],
 )
 
 def generate_answer(question: str, context_chunks: List[str]) -> str:
-    context = "\n\n".join(context_chunks)
+    f"""
+    Генерирует ответ на вопрос, используя контекст из чанков.
+    Использует API Llama-3.1-8B-Instruct.
+    """
 
-    prompt = (
-        "Answer the question using only the context below. "
-        "If the answer is not in the context, say you don't know.\n\n"
-        f"Context:\n{context}\n\n"
-        f"Question:\n{question}"
+    context = "\n".join(context_chunks)
+    
+    completion = client.chat.completions.create(
+        model="meta-llama/Llama-3.1-8B-Instruct",
+        messages=[
+            {"role": "system", 
+            "content": "Ты - полезный ассистент. Отвечай на вопросы ТОЛЬКО на основе предоставленного контекста. "
+            "Если ответа нет в контексте, скажи, что не можешь найти ответа на вопрос в документе."},
+            {"role": "user", "content": f"""Контекст: {context} 
+            Вопрос: {question} Ответ (только на основе контекста):"""
+            }
+        ],
+        temperature=0.1,
+        max_tokens=200
     )
 
-    result = qa_pipeline(prompt)[0]["generated_text"]
-    return result
+    answer = completion.choices[0].message.content
+
+    return answer
+

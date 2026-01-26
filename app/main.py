@@ -4,7 +4,7 @@ from app.api import router
 app = FastAPI(
     title="Document QA Service",
     description="Question answering over uploaded documents",
-    version="0.1.0"
+    version="0.2.0"
 )
 
 app.include_router(router)

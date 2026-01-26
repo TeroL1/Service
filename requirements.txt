@@ -7,3 +7,9 @@ numpy
 openai
 torch
 transformers
+pdfplumber
+python-docx
+python-dotenv
+huggingface-hub
+accelerate
+unstructured
