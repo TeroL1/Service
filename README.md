@@ -11,6 +11,7 @@
 4. Выполнять семантический поиск по документам (cosine similarity через L2 нормализованные векторы).  
 5. Ранжировать найденные фрагменты с помощью простого lexical reranking.  
 6. Генерировать ответы с помощью LLM ("Llama-3.1-8B-Instruct").  
+7. Взаимодействовать с сервисом через Telegram-бота (все функции из API).
 
 ## Установка
 
@@ -21,10 +22,22 @@
     venv\Scripts\Activate.ps1`
 4. Установите зависимости:
    `pip install -r requirements.txt`
+5. Опционально в .env добавьте:
+BOT_TOKEN (если пользуетесь ботом в ТГ)
+API_URL (куда подключается телеграм бот - для локальной разработки совпадает с API_HOST + API_PORT)
+API_HOST (где запускается API сервер)
+API_PORT (порт)
 
 ## Запуск сервиса
 
-`uvicorn app.main:app --reload`
+API:
+`python -m app.main --mode api`
+
+Bot с внешним API (API должен быть запущен отдельно!!!):
+`python -m app.main --mode bot`
+
+Оба (Рекомендуется для локального запуска):
+`python -m app.main --mode both`
 
 ## API Endpoints
 

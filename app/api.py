@@ -37,12 +37,12 @@ def upload_document(file: UploadFile = File(...)):
 @router.post("/ask")
 def ask_question(request: AskRequest):
     try:
-        retrieved = search(request.question, top_k=10)
+        retrieved = search(request.question, top_k=15)
 
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-    reranked = rerank(request.question, retrieved, top_k=3)
+    reranked = rerank(request.question, retrieved, top_k=5)
     context_chunks = [chunk["text"] for chunk in reranked]
     answer = generate_answer(request.question, context_chunks)
 

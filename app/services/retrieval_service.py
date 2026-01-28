@@ -28,7 +28,7 @@ def add_embeddings_to_index(embeddings: np.ndarray, chunks: List[str]):
     index.add(embeddings)
     stored_chunks.extend(chunks)
 
-def search(query: str, top_k: int = 3) -> List[str]:
+def search(query: str, top_k: int = 10) -> List[str]:
     """
     Находит top_k похожих чанков на вопрос
     """
@@ -45,7 +45,7 @@ def search(query: str, top_k: int = 3) -> List[str]:
 
     return results
 
-def rerank(query: str, chunks: List[dict], top_k: int = 3):
+def rerank(query: str, chunks: List[dict], top_k: int = 5):
     """
     Находит из предложенных раннее чанков top_k похожих на вопрос
     """
