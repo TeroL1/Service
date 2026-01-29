@@ -3,7 +3,7 @@ from pydantic import BaseModel
 
 from app.services.document_service import read_text_from_file, chunk_text
 from app.services.retrieval_service import search, compute_embeddings, add_embeddings_to_index, rerank, get_stats, reset_index
-from app.services.llm_service import generate_answer
+from app.services.llm_service import generate_answer, generate_query_variations
 
 router = APIRouter()
 
@@ -37,14 +37,15 @@ def upload_document(file: UploadFile = File(...)):
 @router.post("/ask")
 def ask_question(request: AskRequest):
     try:
+        #questions = generate_query_variations(request.question, num_variations=2)
         retrieved = search(request.question, top_k=15)
+
+        reranked = rerank(request.question, retrieved, top_k=5)
+        context_chunks = [chunk["text"] for chunk in reranked]
+        answer = generate_answer(request.question, context_chunks)
 
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-    reranked = rerank(request.question, retrieved, top_k=5)
-    context_chunks = [chunk["text"] for chunk in reranked]
-    answer = generate_answer(request.question, context_chunks)
 
     return {
         "question": request.question,

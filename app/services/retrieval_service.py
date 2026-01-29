@@ -1,9 +1,10 @@
 from typing import List
 import numpy as np
-from sentence_transformers import SentenceTransformer
+from sentence_transformers import SentenceTransformer, CrossEncoder
 import faiss 
 
 model = SentenceTransformer("sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
+reranker = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
 
 def compute_embeddings(chunks: List[str]) -> np.ndarray:
     """
@@ -50,14 +51,11 @@ def rerank(query: str, chunks: List[dict], top_k: int = 5):
     Находит из предложенных раннее чанков top_k похожих на вопрос
     """
 
-    query_words = set(query.lower().split())
-
-    def score(chunk):
-        chunk_words = set(chunk["text"].lower().split())
-        return len(query_words & chunk_words)
-
-    ranked = sorted(chunks, key=score, reverse=True)
-    return ranked[:top_k]
+    pairs = [[query, chunk["text"]] for chunk in chunks]
+    scores = reranker.predict(pairs)
+    ranked_indices = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)
+    
+    return [chunks[i] for i in ranked_indices[:top_k]]
 
 def reset_index():
     """

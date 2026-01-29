@@ -12,7 +12,7 @@ client = InferenceClient(
 )
 
 def generate_answer(question: str, context_chunks: List[str]) -> str:
-    f"""
+    """
     Генерирует ответ на вопрос, используя контекст из чанков.
     Использует API Llama-3.1-8B-Instruct.
     """
@@ -37,3 +37,28 @@ def generate_answer(question: str, context_chunks: List[str]) -> str:
 
     return answer
 
+def generate_query_variations(original_query: str, num_variations: int = 2) -> List[str]:
+    """
+    Генерирует переформулировки запроса для улучшения поиска.
+    """
+
+    completion = client.chat.completions.create(
+        model="meta-llama/Llama-3.1-8B-Instruct",
+        messages=[
+            {"role": "system", 
+             "content": "Ты помогаешь улучшить поиск по документам. "
+                       "Перефразируй вопрос несколькими способами, сохраняя смысл. "
+                       "Используй синонимы и разные формулировки. "
+                       "Отвечай ТОЛЬКО переформулировками, по одной на строку."
+            },
+            {"role": "user", 
+             "content": f"Перефразируй этот вопрос {num_variations} разными способами:\n\n{original_query}"
+            }
+        ],
+        temperature=0.7,
+        max_tokens=150
+    )
+    
+    response_text = completion.choices[0].message.content.strip()
+    
+    return original_query + '\n' + response_text

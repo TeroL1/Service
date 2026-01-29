@@ -19,8 +19,8 @@ async def cmd_start(message: Message):
         "Отправь мне файл (.txt, .pdf, .docx) - я его проиндексирую\n"
         "Напиши вопрос - отвечу на основе загруженных документов\n\n"
         "Команды:\n"
-        "/stats — статистика базы\n"
-        "/reset — очистить базу"
+        "/stats - статистика базы\n"
+        "/reset - очистить базу"
     )
 
 @dp.message(Command("stats"))
@@ -28,7 +28,8 @@ async def cmd_stats(message: Message):
     async with aiohttp.ClientSession() as session:
         async with session.get(f"{API_URL}/stats") as resp:
             stats = await resp.json()
-            await message.answer(f"Статистика:\n{stats}")
+            answer = ''.join([f'{name}: {value}\n' for name, value in stats.items()])
+            await message.answer(f"Статистика:\n{answer}")
 
 @dp.message(Command("reset"))
 async def cmd_reset(message: Message):
@@ -39,6 +40,8 @@ async def cmd_reset(message: Message):
 @dp.message(lambda msg: msg.document is not None)
 async def handle_document(message: Message):
     doc = message.document
+
+    await message.answer("Обработка документа может занять какое-то время...")
     
     with tempfile.NamedTemporaryFile(delete=False, suffix=doc.file_name) as tmp:
         await bot.download(doc, destination=tmp.name)
@@ -55,17 +58,17 @@ async def handle_document(message: Message):
                         result = await resp.json()
                         await message.answer(
                             f"Документ обработан!\n"
-                            f"{result['filename']}\n"
-                            f"Чанков: {result['num_chunks']}"
+                            f"Пример чанка: {result['chunk_preview']}\n"
+                            f"Всего чанков: {result['num_chunks']}"
                         )
                     else:
                         error = await resp.text()
                         print(f"Ошибка: {str(error)}")
-                        await message.answer(f"Ошибка")
+                        await message.answer(f"Извините, ошибка работы программы")
 
     except Exception as e:
         print(f"Ошибка обработки: {str(e)}")
-        await message.answer(f"Ошибка обработки")
+        await message.answer(f"Извините, ошибка обработки")
 
     finally:
         os.remove(tmp_path)
@@ -88,7 +91,7 @@ async def handle_question(message: Message):
             else:
                 error = await resp.text()
                 print(f'Ошибка: {error}')
-                await message.answer(f"Ошибка")
+                await message.answer(f"Извините, ошибка работы программы")
 
 async def start_bot():
     await dp.start_polling(bot)
