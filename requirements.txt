@@ -2,7 +2,6 @@ fastapi
 uvicorn
 python-multipart
 sentence-transformers
-faiss-cpu
 numpy
 openai
 torch
@@ -16,3 +15,6 @@ unstructured
 asyncio
 aiohttp
 aiogram
+sqlalchemy
+pgvector
+psycopg2

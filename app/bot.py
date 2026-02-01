@@ -25,20 +25,25 @@ async def cmd_start(message: Message):
 
 @dp.message(Command("stats"))
 async def cmd_stats(message: Message):
+    user_id = message.from_user.id
+
     async with aiohttp.ClientSession() as session:
-        async with session.get(f"{API_URL}/stats") as resp:
+        async with session.get(f"{API_URL}/stats/{user_id}") as resp:
             stats = await resp.json()
             answer = ''.join([f'{name}: {value}\n' for name, value in stats.items()])
             await message.answer(f"Статистика:\n{answer}")
 
 @dp.message(Command("reset"))
 async def cmd_reset(message: Message):
+    user_id = message.from_user.id
+
     async with aiohttp.ClientSession() as session:
-        async with session.post(f"{API_URL}/reset") as resp:
+        async with session.post(f"{API_URL}/reset/{user_id}") as resp:
             await message.answer("База очищена!")
 
 @dp.message(lambda msg: msg.document is not None)
 async def handle_document(message: Message):
+    user_id = message.from_user.id
     doc = message.document
 
     await message.answer("Обработка документа может занять какое-то время...")
@@ -53,7 +58,7 @@ async def handle_document(message: Message):
                 data = aiohttp.FormData()
                 data.add_field('file', f, filename=doc.file_name)
                 
-                async with session.post(f"{API_URL}/documents", data=data) as resp:
+                async with session.post(f"{API_URL}/documents", params={"user_id": user_id}, data=data) as resp:
                     if resp.status == 200:
                         result = await resp.json()
                         await message.answer(
@@ -61,6 +66,7 @@ async def handle_document(message: Message):
                             f"Пример чанка: {result['chunk_preview']}\n"
                             f"Всего чанков: {result['num_chunks']}"
                         )
+                        
                     else:
                         error = await resp.text()
                         print(f"Ошибка: {str(error)}")
@@ -75,6 +81,7 @@ async def handle_document(message: Message):
 
 @dp.message()
 async def handle_question(message: Message):
+    user_id = message.from_user.id
     question = message.text
     
     await message.answer("Думаю...")
@@ -82,7 +89,7 @@ async def handle_question(message: Message):
     async with aiohttp.ClientSession() as session:
         async with session.post(
             f"{API_URL}/ask",
-            json={"question": question}
+            json={"user_id": user_id, "question": question}
         ) as resp:
             if resp.status == 200:
                 result = await resp.json()
@@ -91,7 +98,7 @@ async def handle_question(message: Message):
             else:
                 error = await resp.text()
                 print(f'Ошибка: {error}')
-                await message.answer(f"Извините, ошибка работы программы")
+                await message.answer(f"Извините. Ошибка работы программы. Если вы не загрузили документ, то сначала сделайте это.")
 
 async def start_bot():
     await dp.start_polling(bot)
